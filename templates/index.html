@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Composite Scan</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { display: flex; flex-direction: column; }
+        .panel { margin-bottom: 20px; }
+        .heatmap { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+        .heatmap-item { padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="panel">
+            <h2>High Potential (Squeeze/Breakout)</h2>
+            <div id="heatmap-container" class="heatmap"></div>
+        </div>
+        <div class="panel">
+            <h2>High Probability (Trending/Pullback)</h2>
+            <div class="table-container">
+                <table id="pullback-table">
+                    <thead>
+                        <tr>
+                            <th>Ticker</th>
+                            <th>Name</th>
+                            <th>Strategy</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchData() {
+            const response = await fetch('/data');
+            const data = await response.json();
+
+            const heatmapContainer = document.getElementById('heatmap-container');
+            const pullbackTableBody = document.querySelector('#pullback-table tbody');
+
+            heatmapContainer.innerHTML = '';
+            pullbackTableBody.innerHTML = '';
+
+            const highPotentialData = data.filter(d => d.Strategy_Type === 'High_Potential');
+            const highProbabilityData = data.filter(d => d.Strategy_Type === 'High_Probability');
+
+            highPotentialData.forEach(item => {
+                const heatmapItem = document.createElement('div');
+                heatmapItem.classList.add('heatmap-item');
+                heatmapItem.innerHTML = `<strong>${item.ticker}</strong><br>${item.name}`;
+                heatmapContainer.appendChild(heatmapItem);
+            });
+
+            highProbabilityData.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.ticker}</td>
+                    <td>${item.name}</td>
+                    <td>${item.Strategy_Type}</td>
+                `;
+                pullbackTableBody.appendChild(row);
+            });
+        }
+
+        setInterval(fetchData, 5000); // Fetch data every 5 seconds
+        fetchData(); // Initial fetch
+    </script>
+</body>
+</html>
